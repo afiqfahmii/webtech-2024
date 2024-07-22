@@ -1,0 +1,94 @@
+<html>
+  <head>
+    <title>SECJ3483 - Assignment 1</title>
+  </head>
+  <body>
+    <table border="1" width="400">
+      <tr id="row_head">
+        <th>Month</th>
+        <th>Income</th>
+        <th>Expense</th>
+        <th>Balance</th>
+      </tr>
+      <tr id="row_total">
+        <th>TOTAL</th>
+        <th id="total_income" class="numeric"></th>
+        <th id="total_expense" class="numeric"></th>
+        <th id="total_balance" class="numeric"></th>
+      </tr>
+    </table>
+    <pre>
+    Group Members:
+    1. Afiq Fahmi Bin Roslan A21EC0153
+    2. Aiman Haikal Bin Abdul Rusli A21EC0008
+    3. Muhammad Taufiq Bin Jurimi A21EC0095
+    </pre>
+  </body>
+</html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var total_income = 0;
+    var total_expense = 0;
+    var total_balance = 0;
+    var totalMonth = 0;
+
+    function updateTotals() {
+        $('#total_income').text(total_income);
+        $('#total_expense').text(total_expense);
+        $('#total_balance').text(total_balance);
+    }
+
+    function fetchDataForMonth(monthIndex) {
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost/webtech/assg1/expenses.php',
+            data: { month: monthIndex + 1 },
+            dataType: 'text',
+            success: function(expense) {
+                $.ajax({
+                    type: 'GET',
+                    url: 'http://localhost/webtech/assg1/incomes.php',
+                    data: { month: monthIndex + 1 },
+                    dataType: 'text',
+                    success: function(income) {
+                        var incomeValue = parseInt(income);
+                        var expenseValue = parseInt(expense);
+                        var balance = incomeValue - expenseValue;
+
+                        total_income += incomeValue;
+                        total_expense += expenseValue;
+                        total_balance += balance;
+
+                        var row = $('<tr>').append(
+                            $('<td>').text(months[monthIndex]),
+                            $('<td>').text(incomeValue),
+                            $('<td>').text(expenseValue),
+                            $('<td>').text(balance)
+                        );
+
+                        $('#row_total').before(row);
+
+                        totalMonth++;
+                        if (totalMonth === months.length) {
+                            updateTotals();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert("Failed to fetch income for " + months[monthIndex] + ": " + status);
+                    }
+                });
+            },
+            error: function(xhr, status, error) {
+                alert("Failed to fetch expense for " + months[monthIndex] + ": " + status);
+            }
+        });
+    }
+
+    for (var i = 0; i < months.length; i++) {
+        fetchDataForMonth(i);
+    }
+});
+
+    </script>
