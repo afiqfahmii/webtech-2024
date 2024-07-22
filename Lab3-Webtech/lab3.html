@@ -1,0 +1,152 @@
+<html>
+
+<head>
+  <title>Lab 3</title>
+</head>
+
+<body id="lab3">
+  <h3>Fruit data form entry:</h3>
+  <table border="1">
+    <tr>
+      <th>Fruit Name</th>
+      <th>Operation</th>
+    </tr>
+    <tr v-for="(fruit, idx) in fruitsLocal" :key="idx">
+      <td>{{fruit.name}}</td>
+      <td align="center">
+        <a href="#" v-on:click.prevent="deleteFruit(idx)">Delete</a> |
+        <a href="#" v-on:click.prevent="saveFruit(idx)">Save</a>
+      </td>
+    </tr>
+    <tr>
+      <td>...</td>
+      <td align="center">
+        <a href="#" v-on:click.prevent="saveAllFruits">Save All</a>
+      </td>
+    </tr>
+    <tr id="InputRow">
+      <td><input type="text" v-model="fruit_name"></td>
+      <td align="center">
+        <input type="button" v-on:click="addFruit" value="Add">
+      </td>
+    </tr>
+  </table>
+
+  <h3>Fruit database list:</h3>
+  <table border="1">
+    <tr>
+      <th>Fruit Name</th>
+      <th>ID</th>
+    </tr>
+    <tr v-for="(fruit, idx) in fruitsDB" :key="idx">
+      <td>{{fruit.name}}</td>
+      <td align="center">{{fruit.id}}</td>
+    </tr>
+  </table>
+  <pre>
+    <b>Group Members:</b>
+    1. Afiq Fahmi Bin Roslan A21EC0153
+    2. Aiman Haikal Bin Abdul Rusli A21EC0008
+    3. Muhammad Taufiq Bin Jurimi A21EC0095
+    </pre>
+
+</body>
+
+</html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+<script>
+  const vueApp = Vue.createApp({
+    data() {
+      return {
+        fruit_name: '',
+        fruitsLocal: [{ name: 'Mango' }, { name: 'Orange' }],
+        fruitsDB: [],
+      }
+    },
+    methods: {
+      addFruit() {
+        this.fruitsLocal.push({ name: this.fruit_name });
+        this.fruit_name = '';
+      },
+
+      deleteFruit(idx) {
+        console.log('delete ' + idx);
+        this.fruitsLocal.splice(idx, 1);
+      },
+
+      saveFruit(idx) {
+        const fruitToSave = this.fruitsLocal[idx];
+        const url = 'http://localhost/webtech/lab3/dbsave.php';
+        const data = JSON.stringify([fruitToSave]);
+
+        const formData = new URLSearchParams();
+        formData.append('jsonStr', data);
+
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: formData
+        })
+          .then(res => res.json())
+          .then(response => {
+            console.log(response);
+            if (response.status === 'success') {
+              this.getFruits();
+            } else {
+              alert('Error saving fruit');
+            }
+          })
+          .catch(err => console.log(err));
+      },
+
+      saveAllFruits() {
+        const url = 'http://localhost/webtech/lab3/dbsave.php';
+        const data = JSON.stringify(this.fruitsLocal);
+
+        const formData = new URLSearchParams();
+        formData.append('jsonStr', data);
+
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: formData
+        })
+          .then(res => res.json())
+          .then(response => {
+            console.log(response);
+            if (response.status === 'success') {
+              this.getFruits();
+            } else {
+              alert('Error saving all fruits');
+            }
+          })
+          .catch(err => console.log(err));
+      },
+
+      getFruits() {
+        var url = 'http://localhost/webtech/lab3/dbread.php';
+
+        fetch(url)
+          .then(res => res.text())
+          .then(jsonText => {
+            console.log(jsonText);
+            this.fruitsDB = JSON.parse(jsonText).data;
+          })
+          .catch(err => console.log(err));
+      }
+    },
+    mounted() {
+      console.log("getFruits");
+      this.getFruits();
+      setInterval(this.getFruits, 5000); // Refresh fruits list every 5 seconds
+    }
+  });
+
+  vueApp.mount("#lab3");
+</script>
